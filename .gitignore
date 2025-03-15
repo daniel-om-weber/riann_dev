@@ -1,0 +1,8 @@
+imu_data
+*.pickle
+*.hdf5
+*.h5
+*.hdf5
+*.h5
+
+.DS_Store
