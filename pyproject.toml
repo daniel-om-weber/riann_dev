@@ -1,0 +1,11 @@
+[project]
+name = "riann"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "tsfast",
+    "matplotlib",
+]
+
+[tool.uv.sources]
+tsfast = { path = "../tsfast", editable = true }
