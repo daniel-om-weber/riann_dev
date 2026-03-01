@@ -5,13 +5,9 @@ from pathlib import Path
 import h5py
 import numpy as np
 
-from tsfast.tsdata import (
-    FileEntry,
-    WindowedDataset,
-    get_hdf_files,
-)
+from tsfast.tsdata import get_hdf_files
 from tsfast.tsdata.pipeline import DataLoaders, create_dls_from_readers
-from tsfast.tsdata.readers import HDF5Signals, Resampled
+from tsfast.tsdata.readers import HDF5Signals,Resampled
 
 # ── Signal definitions ────────────────────────────────────────────────────────
 
@@ -100,7 +96,7 @@ def get_dls(
     stp_sz: int = 60,
     bs: int = 64,
     n_batches_train: int = 300,
-    targ_fs: list[float] | None = None,
+    targ_fs: list[float] | None = None
 ) -> DataLoaders:
     """Create DataLoaders for GAE training with on-the-fly resampling.
 
@@ -112,54 +108,23 @@ def get_dls(
         n_batches_train: number of training batches per epoch
         targ_fs: target sampling frequencies for resampling.
             Defaults to 100 equidistant rates between 50 and 500 Hz.
+        num_workers: number of DataLoader worker processes
     """
     if targ_fs is None:
         targ_fs = np.linspace(50, 500, 100).tolist()
 
     splits = get_files(data_dir)
 
-    # Build per-file resampling factors
-    def _make_entries(files: list[Path]) -> list[FileEntry]:
-        entries = []
-        for f in files:
-            src_fs = _read_src_fs(f)
-            for tf in targ_fs:
-                factor = tf / src_fs
-                entries.append(FileEntry(path=str(f), resampling_factor=factor))
-        return entries
-
-    train_entries = _make_entries(splits["train"])
-    valid_entries = _make_entries(splits["valid"])
-    test_entries = _make_entries(splits["test"]) if splits["test"] else []
-
-    # Readers with on-the-fly resampling
-    inputs = Resampled(HDF5Signals(u_dt, dt_idx=6))
-    targets = Resampled(HDF5Signals(y))
-
-    # Build datasets
-    train_ds = WindowedDataset(train_entries, inputs, targets, win_sz=win_sz, stp_sz=stp_sz)
-    valid_ds = WindowedDataset(valid_entries, inputs, targets, win_sz=win_sz, stp_sz=win_sz)
-
-    # Build DataLoaders
-    from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-    import torch
-
-    n_samples_train = n_batches_train * bs
-    train_sampler = RandomSampler(train_ds, replacement=True, num_samples=n_samples_train)
-    valid_sampler = SequentialSampler(valid_ds)
-
-    train_dl = DataLoader(
-        train_ds, batch_size=bs, sampler=train_sampler,
-        drop_last=True, pin_memory=torch.cuda.is_available(),
+    return create_dls_from_readers(
+        inputs=Resampled(HDF5Signals(u_dt), dt_idx=6),
+        targets=Resampled(HDF5Signals(y)),
+        train_files=splits["train"],
+        valid_files=splits["valid"],
+        test_files=splits["test"] or None,
+        win_sz=win_sz,
+        stp_sz=stp_sz,
+        bs=bs,
+        n_batches_train=n_batches_train,
+        targ_fs=targ_fs,
+        src_fs=_read_src_fs
     )
-    valid_dl = DataLoader(
-        valid_ds, batch_size=bs, sampler=valid_sampler,
-        drop_last=False, pin_memory=torch.cuda.is_available(),
-    )
-
-    test_dl = None
-    if test_entries:
-        test_ds = WindowedDataset(test_entries, inputs, targets, win_sz=None)
-        test_dl = DataLoader(test_ds, batch_size=1, sampler=SequentialSampler(test_ds))
-
-    return DataLoaders(train=train_dl, valid=valid_dl, test=test_dl)

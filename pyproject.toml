@@ -12,3 +12,8 @@ prep = ["scipy", "h5py", "pandas", "requests", "tqdm"]
 
 [tool.uv.sources]
 tsfast = { path = "../tsfast", editable = true }
+
+[dependency-groups]
+dev = [
+    "line-profiler>=5.0.2",
+]
