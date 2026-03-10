@@ -1,8 +1,8 @@
-# RIANN
+# RIANN Training Code
 
-Recurrent Inertial Attitude Neural Network — a GRU-based deep learning model for real-time orientation estimation from inertial measurement unit (IMU) data.
+This repository contains the reimplemented training pipeline for [RIANN](https://www.mdpi.com/2673-2688/2/3/28) (Robust IMU-based Attitude Neural Network), a GRU-based model for real-time orientation estimation from inertial measurement unit (IMU) data.
 
-RIANN takes raw accelerometer and gyroscope readings and outputs orientation quaternions. It is trained on 6 standardized datasets using the [tsfast](https://pypi.org/project/tsfast/) library and supports on-the-fly resampling across a wide range of sampling frequencies (50–500 Hz).
+The pretrained RIANN model has been publicly available for years at [daniel-om-weber/riann](https://github.com/daniel-om-weber/riann) (`pip install riann`), but the original training code was never published — it was lost in a hacking attack shortly after the paper's release. This repository provides a full reimplementation of the training pipeline, including data preparation, training, and evaluation.
 
 ## Installation
 
@@ -27,7 +27,7 @@ Prepared HDF5 datasets are included in the repository via Git LFS. They are read
 
 | Dataset | Role | Files | Description |
 |---------|------|-------|-------------|
-| Myon (BROAD) | Train / Valid / Test | 39 | Human motion capture from Myon exoskeleton |
+| Myon (BROAD) | Train / Valid / Test | 39 | IMU benchmark with optical motion capture ground truth |
 | TUM-VI | Train / Valid | 6 | Visual-inertial dataset (indoor rooms) |
 | OxIOD | Test | 71 | Oxford Inertial Odometry Dataset |
 | EuRoC-MAV | Test | 6 | Micro aerial vehicle dataset |
@@ -49,7 +49,7 @@ uv run python scripts/prepare_data.py --keep-raw    # keep raw downloads
 uv run python train.py
 ```
 
-Trains a 2-layer GRU (hidden size 200) with the Ranger optimizer for 512 epochs. Uses inclination angle as the loss function and reports mean/RMS inclination error in degrees. CUDA graphs are enabled when a GPU is available.
+Trains a 2-layer GRU with on-the-fly resampling across 50–500 Hz. See `train.py` for the full configuration.
 
 ## Utility Scripts
 
@@ -69,6 +69,22 @@ Each dataset file contains 1D float32 arrays:
 | `dt` | s | Sampling interval (scalar) |
 | `mag_x`, `mag_y`, `mag_z` | — | Magnetometer (optional) |
 | `movement_mask` | — | Binary activity indicator (optional) |
+
+## Citation
+
+```bibtex
+@article{Weber2021RIANN,
+  title     = {{RIANN---A Robust Neural Network Outperforms Attitude Estimation Filters}},
+  author    = {Weber, Daniel and G{\"u}hmann, Clemens and Seel, Thomas},
+  journal   = {AI},
+  volume    = {2},
+  number    = {3},
+  pages     = {444--463},
+  year      = {2021},
+  publisher = {MDPI},
+  doi       = {10.3390/ai2030028}
+}
+```
 
 ## License
 

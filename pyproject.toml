@@ -24,8 +24,3 @@ prep = ["scipy", "h5py", "pandas", "requests", "tqdm"]
 
 [project.urls]
 Repository = "https://github.com/daniel-om-weber/riann_dev"
-
-[dependency-groups]
-dev = [
-    "line-profiler>=5.0.2",
-]
