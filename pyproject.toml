@@ -1,9 +1,20 @@
 [project]
 name = "riann"
 version = "0.1.0"
+description = "Recurrent Inertial Attitude Neural Network — GRU-based orientation estimation from IMU data"
 requires-python = ">=3.10"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{ name = "Daniel O.M. Weber" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
-    "tsfast",
+    "tsfast>=0.3",
     "matplotlib",
     "pytorch-optimizer",
 ]
@@ -11,8 +22,8 @@ dependencies = [
 [project.optional-dependencies]
 prep = ["scipy", "h5py", "pandas", "requests", "tqdm"]
 
-[tool.uv.sources]
-tsfast = { path = "../tsfast", editable = true }
+[project.urls]
+Repository = "https://github.com/daniel-om-weber/riann_dev"
 
 [dependency-groups]
 dev = [
